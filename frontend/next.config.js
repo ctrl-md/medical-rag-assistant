@@ -1,14 +1,11 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-  async rewrites() {
-    const backendUrl = process.env.API || "http://127.0.0.1:8000";
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
-};
+// No API rewrite here on purpose. Routing /api/* through Next.js's rewrite
+// proxy would run it as a Netlify Function on deploy, and Netlify Functions
+// on the free tier have a hard 10-second execution timeout -- far shorter
+// than Render's free-tier cold start (30-60s after 15 minutes idle). Instead,
+// app/page.tsx fetches the backend directly using API, so
+// the browser's own request (no built-in timeout) is what waits through a
+// cold start, not a Netlify Function that would kill it first.
+const nextConfig = {};
 
 module.exports = nextConfig;

@@ -6,23 +6,47 @@ import AnswerDisplay from "./components/AnswerDisplay";
 import SourcesList from "./components/SourcesList";
 import { AskResponse } from "@/lib/types";
 
+// Called directly from the browser rather than through Next.js's rewrite proxy.
+// On Netlify's free tier, that proxy runs as a Netlify Function with a hard
+// 10-second timeout -- far shorter than Render's free-tier cold start (30-60s
+// after 15 minutes of inactivity). Fetching the backend directly means the
+// browser's own request (which has no built-in timeout) is what waits through
+// a cold start, not a Netlify Function that would kill it first.
+const BACKEND_URL = process.env.API || "http://127.0.0.1:8000";
+
+// Generous enough to comfortably cover a Render cold start, but not infinite --
+// if the backend is genuinely unreachable, the person asking shouldn't be left
+// staring at a spinner forever.
+const REQUEST_TIMEOUT_MS = 90_000;
+
 export default function Home() {
   const [query, setQuery] = useState("");
   const [askedQuery, setAskedQuery] = useState("");
   const [result, setResult] = useState<AskResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [slowStart, setSlowStart] = useState(false);
 
   async function handleAsk(submittedQuery: string) {
     setLoading(true);
     setError(null);
     setResult(null);
+    setSlowStart(false);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+    // The backend's free-tier host may need to wake up first. If this is
+    // still loading after a few seconds, let the person know that's likely
+    // what's happening rather than leave them guessing whether it's broken.
+    const slowStartTimer = setTimeout(() => setSlowStart(true), 6_000);
 
     try {
-      const res = await fetch("/api/ask", {
+      const res = await fetch(`${BACKEND_URL}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: submittedQuery }),
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -42,12 +66,21 @@ export default function Home() {
       setAskedQuery(submittedQuery);
       setResult(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Unknown error";
-      setError(
-        `Something went wrong: ${message}. Check that the backend server is running and your GEMINI_API_KEY is set.`,
-      );
+      if (err instanceof DOMException && err.name === "AbortError") {
+        setError(
+          "The request timed out. The backend may be waking up from being idle -- please wait a moment and try again.",
+        );
+      } else {
+        const message = err instanceof Error ? err.message : "Unknown error";
+        setError(
+          `Something went wrong: ${message}. Check that the backend server is running and your GEMINI_API_KEY is set.`,
+        );
+      }
     } finally {
+      clearTimeout(timeoutId);
+      clearTimeout(slowStartTimer);
       setLoading(false);
+      setSlowStart(false);
     }
   }
 
@@ -81,7 +114,7 @@ export default function Home() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
             <svg
-              className="h-5 w-5 shrink-0 text-amber-500"
+              className="h-5 w-5 flex-shrink-0 text-amber-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -128,7 +161,9 @@ export default function Home() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Searching MedlinePlus and building a grounded answer&hellip;
+              {slowStart
+                ? "Still working -- the backend may be waking up from being idle, this can take up to a minute\u2026"
+                : "Searching MedlinePlus and building a grounded answer\u2026"}
             </div>
           )}
 
