@@ -12,7 +12,8 @@ import { AskResponse } from "@/lib/types";
 // after 15 minutes of inactivity). Fetching the backend directly means the
 // browser's own request (which has no built-in timeout) is what waits through
 // a cold start, not a Netlify Function that would kill it first.
-const BACKEND_URL = process.env.API || "http://127.0.0.1:8000";
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 // Generous enough to comfortably cover a Render cold start, but not infinite --
 // if the backend is genuinely unreachable, the person asking shouldn't be left
@@ -114,7 +115,7 @@ export default function Home() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
             <svg
-              className="h-5 w-5 flex-shrink-0 text-amber-500"
+              className="h-5 w-5 shrink-0 text-amber-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
