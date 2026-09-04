@@ -26,7 +26,16 @@ export default function Home() {
       });
 
       if (!res.ok) {
-        throw new Error(`Request failed (${res.status})`);
+        let message = `Request failed (${res.status})`;
+        try {
+          const errorBody = await res.json();
+          if (errorBody.detail) {
+            message = errorBody.detail;
+          }
+        } catch {
+          // response body wasn't valid JSON -- fall back to the generic message above
+        }
+        throw new Error(message);
       }
 
       const data: AskResponse = await res.json();
@@ -35,7 +44,7 @@ export default function Home() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unknown error";
       setError(
-        `Something went wrong: ${message}. Check that the backend server is running and your GEMINI_API_KEY is set.`
+        `Something went wrong: ${message}. Check that the backend server is running and your GEMINI_API_KEY is set.`,
       );
     } finally {
       setLoading(false);

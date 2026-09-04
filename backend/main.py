@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import requests
 import torch
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from google import genai
 from pydantic import BaseModel
@@ -60,9 +60,7 @@ def compute_idf(documents, vocab):
         doc_count = sum(
             1 for doc in documents if word in doc["summary"].lower().split()
         )
-        idf = torch.log(
-            torch.tensor(len(documents) / (doc_count), dtype=torch.float32)
-        )
+        idf = torch.log(torch.tensor(len(documents) / (doc_count), dtype=torch.float32))
         dict_idf[word] = idf
     return dict_idf
 
@@ -202,7 +200,27 @@ def ask(request: AskRequest):
     retrieved = retrieve(query, vocab, idf_scores, docs, k=10)
 
     prompt = build_prompt(query, retrieved)
-    answer = generate_answer(prompt)
+
+    try:
+        answer = generate_answer(prompt)
+    except Exception as e:
+        error_message = str(e)
+        if (
+            "429" in error_message
+            or "quota" in error_message.lower()
+            or "rate" in error_message.lower()
+        ):
+            raise HTTPException(
+                status_code=429,
+                detail=(
+                    "The AI model's free-tier rate limit was reached. "
+                    "Please wait about a minute and try again."
+                ),
+            )
+        raise HTTPException(
+            status_code=502,
+            detail="Something went wrong generating the answer. Please try again.",
+        )
 
     sources = [Source(title=doc["title"], url=doc["url"]) for doc in retrieved]
     return AskResponse(answer=answer, sources=sources)
