@@ -5,6 +5,8 @@ real, cited content from MedlinePlus (the U.S. National Library of Medicine's pu
 health information service) — never general model knowledge. Every answer includes
 numbered citations linking back to the exact source used.
 
+Site: https://med-rag-assistant.netlify.app/
+
 ## Stack
 
 - **Backend**: FastAPI (Python) — MedlinePlus retrieval, a from-scratch TF-IDF
