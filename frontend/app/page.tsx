@@ -19,7 +19,7 @@ export default function Home() {
     setResult(null);
 
     try {
-      const res = await fetch("/api/ask", {
+      const res = await fetch(`${process.env.API_SECRET_KEY}/api/ask`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: submittedQuery }),
@@ -81,7 +81,7 @@ export default function Home() {
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
             <svg
-              className="h-5 w-5 flex-shrink-0 text-amber-500"
+              className="h-5 w-5 shrink-0 text-amber-500"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
