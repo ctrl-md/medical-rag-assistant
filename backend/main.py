@@ -1,3 +1,4 @@
+import os
 import statistics
 import xml.etree.ElementTree as ET
 
@@ -6,13 +7,18 @@ import torch
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from google import genai
+from langchain_groq import ChatGroq
 from pydantic import BaseModel
 
 load_dotenv()
 
 URL = "https://wsearch.nlm.nih.gov/ws/query?db=healthTopics&term="
-client = genai.Client()
+
+llm = ChatGroq(
+    model="openai/gpt-oss-120b",
+    temperature=0.2,
+    api_key=os.getenv("GROQ_API_KEY"),
+)
 
 
 # ---------------------------------------------------------------------------
@@ -118,7 +124,7 @@ def evaluate_retrieval(test_queries, documents, vocab, idf_scores, k):
 
 
 # ---------------------------------------------------------------------------
-# Generation (Gemini, grounded + cited + safety-framed)
+# Generation (Groq, grounded + cited + safety-framed)
 # ---------------------------------------------------------------------------
 
 
@@ -142,10 +148,8 @@ def build_prompt(query, retrieved_docs):
 
 
 def generate_answer(prompt):
-    interaction = client.interactions.create(
-        model="gemini-3.8-flash", input=prompt, stream=False
-    )
-    return getattr(interaction, "output_text", "")
+    response = llm.invoke(prompt)
+    return response.content
 
 
 # ---------------------------------------------------------------------------

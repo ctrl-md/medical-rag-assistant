@@ -2,5 +2,5 @@ fastapi
 uvicorn[standard]
 requests
 torch
-google-genai
+langchain-groq
 python-dotenv

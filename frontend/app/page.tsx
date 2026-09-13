@@ -74,7 +74,7 @@ export default function Home() {
       } else {
         const message = err instanceof Error ? err.message : "Unknown error";
         setError(
-          `Something went wrong: ${message}. Check that the backend server is running and your GEMINI_API_KEY is set.`,
+          `Something went wrong: ${message}. Check that the backend server is running and your GROQ_API_KEY is set.`,
         );
       }
     } finally {

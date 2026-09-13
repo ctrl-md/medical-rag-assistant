@@ -10,7 +10,7 @@ Site: https://med-rag-assistant.netlify.app/
 ## Stack
 
 - **Backend**: FastAPI (Python) — MedlinePlus retrieval, a from-scratch TF-IDF
-  cosine-similarity retriever, and grounded generation via the Gemini API
+  cosine-similarity retriever, and grounded generation via the Groq API
 - **Frontend**: Next.js + TypeScript (App Router) + Tailwind CSS v4 — a componentized
   React UI with a hand-written markdown-to-React renderer for the model's formatted
   output
@@ -21,7 +21,7 @@ Site: https://med-rag-assistant.netlify.app/
    summaries are fetched, and the most relevant ones are ranked with a from-scratch
    TF-IDF cosine-similarity retriever (with a plain-TF fallback for very short,
    corpus-common queries, e.g. a bare "diabetes" against an all-diabetes corpus).
-2. **Generation**: the retrieved documents are handed to Gemini as numbered sources,
+2. **Generation**: the retrieved documents are handed to Groq as numbered sources,
    with explicit instructions to answer only from them, cite by number, use careful
    non-diagnostic language, and recommend consulting a real healthcare provider.
 3. **Frontend**: Next.js calls the backend, renders the answer's headers/bold/italic/
@@ -43,10 +43,11 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Open `.env` and paste your real Gemini API key from
-[Google AI Studio](https://aistudio.google.com/apikey) in place of `your-api-key-here`.
+Open `.env` and paste your real Groq API key from
+[GroqCloud](https://console.groq.com/keys) in place of `your-api-key-here`.
 
 Run it:
+
 ```bash
 uvicorn main:app --reload
 ```
@@ -56,6 +57,7 @@ This starts the API on `http://127.0.0.1:8000`.
 ### 2. Frontend
 
 In a second terminal:
+
 ```bash
 cd frontend
 npm install
@@ -96,10 +98,13 @@ medical-rag-assistant/
 ## API
 
 **POST** `/api/ask`
+
 ```json
 { "query": "what are the symptoms of type 2 diabetes?" }
 ```
+
 Returns:
+
 ```json
 {
   "answer": "...",
