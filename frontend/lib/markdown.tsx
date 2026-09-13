@@ -106,7 +106,7 @@ export function renderAnswer(text: string): React.ReactNode[] {
           key={`li-${i}`}
           className="flex gap-2.5 text-[15px] leading-relaxed text-slate-700"
         >
-          <span className="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-indigo-400" />
+          <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
           <span>{parseInline(line.slice(2), `li-${i}`)}</span>
         </li>,
       );
